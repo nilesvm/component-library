@@ -8,49 +8,79 @@ import neighborhoodGeoJson from './neighborhoodGeoJson.json';
 const cx = classNames.bind(styles);
 const className = cx({ mapStyles: true });
 
-const attribute = '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors';
-const url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
+function onEachFeature(feature, layer) {
+  if (feature.properties && feature.properties.NAME) {
+    layer.bindPopup(feature.properties.NAME);
+    layer.on('mouseover', function(e) {
+      e.target.openPopup()
+    });
+  }
+}
 
-console.log(neighborhoodGeoJson)
+function addGeoData(gd, component){
+  return class BoundGeoMap extends Component {
+    static displayName = 'LeafletMap';
+    static propTypes = {
+      position: React.PropTypes.array,
+      zoom: React.PropTypes.number
+    }
 
-const LeafletMap = ({ zoom, position, maxzoom }) => {
-  require('../../assets/leaflet.css');
-
-  function onEachFeature(feature, layer) {
-    if (feature.properties && feature.properties.NAME) {
-      layer.bindPopup(feature.properties.NAME);
-      layer.on('mouseover', function(e) {
-        e.target.openPopup()
-      });
+    constructor(props){
+      super(props);
+      this.state = {
+        geoData: gd
+        position: props.position,
+        zoom: props.zoom
+        attribute: props.attibute || '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+        url: props.url || 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+      }
+    }
+    render() {
+      require('../../assets/leaflet.css');
+      return (
+        <div className={'mainMap'}>
+          <Map className={className}
+            center={this.state.position}
+            zoom={this.state.zoom}
+            zoomControl={false}
+            dragging={false}
+            scrollWheelZoom={false}
+            doubleClickZoom={false}
+          >
+          <TileLayer
+            url={this.state.url}
+            attribution={this.state.attribute}
+          />
+          <GeoJSON
+            data={this.state.geodata}
+            onEachFeature={onEachFeature}
+          />
+          </Map>
+        </div>
+      )
     }
   }
+  BoundGeoMap.component = component;
+  return BoundGeoMap
+}
 
-  return (
-    <div className={'mainMap'}>
-      <Map className={className} center={position} zoom={zoom} zoomControl={false} dragging={false} scrollWheelZoom={false} doubleClickZoom={false} >
-        <TileLayer
-          url={url}
-          attribution={attribute}
-        />
-        <GeoJSON
-          data={neighborhoodGeoJson}
-          onEachFeature={onEachFeature}
-        />
-      </Map>
-    </div>
-  );
-};
+// const BareLeafletMap = ({
+//   data,
+//   zoom = 10,
+//   position
+// }) => ()
 
-LeafletMap.displayName = 'LeafletMap';
+const LeafletMap = addGeoData(neighborhoodGeoJson)(LeafletMap);
 
-LeafletMap.propTypes = {
-  position: React.PropTypes.array,
-  zoom: React.PropTypes.number,
-  zoomControl: React.PropTypes.bool,
-  dragging: React.PropTypes.bool,
-  scrollWheelZoom: React.PropTypes.bool,
-  doubleClickZoom: React.PropTypes.bool
-};
+// LeafletMap.displayName = 'LeafletMap';
 
+// LeafletMap.propTypes = {
+//   position: React.PropTypes.array,
+//   zoom: React.PropTypes.number,
+//   zoomControl: React.PropTypes.bool,
+//   dragging: React.PropTypes.bool,
+//   scrollWheelZoom: React.PropTypes.bool,
+//   doubleClickZoom: React.PropTypes.bool
+// };
 
 export default LeafletMap;
