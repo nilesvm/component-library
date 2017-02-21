@@ -18,9 +18,10 @@ function onEachFeature(feature, layer) {
 }
 
 function wrapLeafletMap(geoData, WrappedComponent){
-  return class BoundGeoMap extends WrappedComponent {
+  class BoundGeoMap extends React.Component {
 
-    static displayName = `LeafletMapWrapper(<${WrappedComponent.displayName} />`;
+    debugger
+    static displayName = `LeafletMapWrapper(<${WrappedComponent.displayName}/>`;
 
     static propTypes = {
       position: React.PropTypes.array,
@@ -58,6 +59,7 @@ function wrapLeafletMap(geoData, WrappedComponent){
 
 const BareLeafletMap = (props) => {
 
+  // debugger
   // constructor(props) {
   //   super(props);
   //   this.state = {
