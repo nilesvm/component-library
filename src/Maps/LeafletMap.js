@@ -17,70 +17,101 @@ function onEachFeature(feature, layer) {
   }
 }
 
-function addGeoData(gd, component){
-  return class BoundGeoMap extends Component {
-    static displayName = 'LeafletMap';
+function wrapLeafletMap(geoData, WrappedComponent){
+  return class BoundGeoMap extends WrappedComponent {
+
+    static displayName = `LeafletMapWrapper(<${WrappedComponent.displayName} />`;
+
     static propTypes = {
       position: React.PropTypes.array,
       zoom: React.PropTypes.number
-    }
+    };
 
     constructor(props){
       super(props);
       this.state = {
-        geoData: gd
-        position: props.position,
-        zoom: props.zoom
+        data: geoData,
+        center: props.position,
+        zoom: props.zoom,
+        minZoom: props.data.map.minZoom,
+        maxBounds: props.data.map.maxBounds,
         attribute: props.attibute || '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
         url: props.url || 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
-      }
-    }
+      };
+    };
+
     render() {
-      require('../../assets/leaflet.css');
-      return (
-        <div className={'mainMap'}>
-          <Map className={className}
-            center={this.state.position}
-            zoom={this.state.zoom}
-            zoomControl={false}
-            dragging={false}
-            scrollWheelZoom={false}
-            doubleClickZoom={false}
-          >
-          <TileLayer
-            url={this.state.url}
-            attribution={this.state.attribute}
-          />
-          <GeoJSON
-            data={this.state.geodata}
-            onEachFeature={onEachFeature}
-          />
-          </Map>
-        </div>
-      )
+      <WrappedComponent
+        data={this.state.data}
+        center={this.state.center}
+        zoom={this.state.zoom}
+        minZoom={this.state.minZoom}
+        maxBounds={this.state.maxBounds}
+        attribute={this.state.attribute}
+        url={this.state.url}
+      />
     }
   }
   BoundGeoMap.component = component;
   return BoundGeoMap
 }
 
-// const BareLeafletMap = ({
-//   data,
-//   zoom = 10,
-//   position
-// }) => ()
+const BareLeafletMap = (props) => {
 
-const LeafletMap = addGeoData(neighborhoodGeoJson)(LeafletMap);
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {
+  //     data: props.data,
+  //     center: props.position,
+  //     zoom: props.zoom,
+  //     minZoom: props.data.map.minZoom,
+  //     maxBounds: props.data.map.maxBounds,
+  //     attribute: props.attibute || '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+  //     url: props.url || 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+  //   };
+  // };
 
-// LeafletMap.displayName = 'LeafletMap';
+  require('../../assets/leaflet.css');
 
-// LeafletMap.propTypes = {
-//   position: React.PropTypes.array,
-//   zoom: React.PropTypes.number,
-//   zoomControl: React.PropTypes.bool,
-//   dragging: React.PropTypes.bool,
-//   scrollWheelZoom: React.PropTypes.bool,
-//   doubleClickZoom: React.PropTypes.bool
-// };
+  return (
+    <div className={'mainMap'}>
+      <Map className={className}
+        center={this.state.center}
+        zoom={this.state.zoom}
+        zoomControl={false}
+        dragging={false}
+        scrollWheelZoom={false}
+        doubleClickZoom={false}
+      >
+      <TileLayer
+        url={this.state.url}
+        attribution={this.state.attribute}
+      />
+      <GeoJSON
+        data={this.state.geodata}
+        onEachFeature={onEachFeature}
+      />
+      </Map>
+    </div>
+  )
+}
 
-export default LeafletMap;
+const LeafletMap = wrapLeafletMap(neighborhoodGeoJson)(LeafletMap);
+
+BareLeafletMap.displayName = 'BareLeafletMap';
+
+BareLeafletMap.propTypes = {
+  center: React.PropTypes.array,
+  maxBounds: React.PropTypes.array,
+  zoom: React.PropTypes.number,
+  minZoom: React.PropTypes.number,
+  markers: React.PropTypes.array,
+  data: React.PropTypes.object,
+};
+
+const PDXLeafletMap = wrapMyComponent(
+  BareLeafletMap,
+  neighborhoodGeoJson,
+);
+
+export default PDXLeafletMap;
